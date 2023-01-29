@@ -8,14 +8,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-//@ComponentScan(basePackages = {"telran"})
-public class CompanyApplication {
+@ComponentScan(basePackages = {"telran"})
+public class CompanyApplApplication {
 
 	private static final Object SHUTDOWN = "shutdown";
 
 	public static void main(String[] args) {
-		//SpringApplication.run(CompanyApplication.class, args);
-		ConfigurableApplicationContext ctx = SpringApplication.run(CompanyApplication.class,  args);
+		ConfigurableApplicationContext ctx = SpringApplication.run(CompanyApplApplication.class,  args);
 		
 		@SuppressWarnings("resource")
 		Scanner scanner = new Scanner(System.in);

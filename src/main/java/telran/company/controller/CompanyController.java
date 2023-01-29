@@ -1,5 +1,6 @@
 package telran.company.controller;
 
+import java.security.Principal;
 import java.time.Month;
 import java.util.List;
 
@@ -26,89 +27,62 @@ public CompanyController(CompanyService companyService) {
 }
 
 @PostMapping("/employees")
-String addEmployee(@RequestBody @Valid Employee employee) {
-	LOG.debug("request for adding employee: {}", employee.toString());
-	String res = String.format("employee with username %s can not be added", employee.firstName);
-	if(companyService.addEmployee(employee).getId() != null) {
-		res = String.format("employee %s has been added", employee.toString());
-		LOG.debug("employee: {} was added", employee.toString());
-	} else {
-		LOG.warn("employee: {} was NOT added", employee.toString());
-	}
-	return res;
+String addEmployee(@RequestBody @Valid Employee employee, Principal user) {
+	LOG.info("request for adding employee: {}, by user: {}", employee.toString(), user.getName());
+	companyService.addEmployee(employee);
+	return String.format("employee %s has been added", employee.toString());
 }
 
 @PutMapping("/employees")
-String updateEmployee(@RequestBody @Valid Employee employee) {
-	LOG.debug("request for uodating employee: {}", employee.toString());
-	String res = String.format("employee with id %s doesn't exist", employee.getId());
-	if(companyService.updateEmployee(employee) != null) {
-		res = String.format("employee %s has been updated", employee.toString());
-		LOG.debug("employee: {} was updated", employee.toString());
-	} else {
-		LOG.warn("employee: {} was NOT updated", employee.toString());
-	}
-	return res;
+String updateEmployee(@RequestBody @Valid Employee employee, Principal user) {
+	LOG.info("request for uodating employee: {}, by user: {}", employee.toString(), user.getName());
+	companyService.updateEmployee(employee);
+	return String.format("employee %s has been updated", employee.toString());
 }
 
 
 @DeleteMapping("/employees/{id}")
-String deleteEmployee(@PathVariable Integer id) {
-	LOG.debug("request for deleting employee with id: {}", id);
-	String res = String.format("employee with id %s doesn't exist", id);
-	Employee employee = companyService.deleteEmployee(id);
-	if (employee != null) {
-		res = String.format("employee %s has been deleted", employee.toString());
-		LOG.info("remployee: {} was deleted", employee.toString());
-	}
-	return res;
+String deleteEmployee(@PathVariable Integer id, Principal user) {
+	LOG.debug("request for deleting employee with id: {}, by user: {}", id, user.getName());
+	Employee empl = companyService.deleteEmployee(id);
+	return String.format("employee %s has been deleted", empl.toString());
 }
 
 @GetMapping("/employees/salary/{salaryFrom}/{salaryTo}")	
-String getEmployeeBySalary(@PathVariable @Min(6000) int salaryFrom,@Max(45000) @PathVariable int salaryTo) {
-	LOG.debug("request for getting employee with salary in range: {}-{}", salaryFrom, salaryTo);
-	String res = String.format("employee with salary range [%s-%s] was not found", 
+String getEmployeeBySalary(@PathVariable @Min(6000) int salaryFrom,@Max(45000) @PathVariable int salaryTo, Principal user) {
+	LOG.debug("request for getting employee with salary in range: {}-{}, by user: {}", salaryFrom, salaryTo, user.getName());
+	String res = String.format("employee in salary range [%s-%s] was not found", 
 	salaryFrom, salaryTo);
 	List<Employee> list = companyService.employeesBySalary(salaryFrom, salaryTo);
-	
 	if(list.size() != 0) {
-		res = String.format("list employee by salaty in range[%s-%s]: %s",
-		salaryFrom, salaryTo, list.toString());
-		LOG.debug("there are {} employees in salary range: {}-{}", list.size(), salaryFrom, salaryTo);
-	} else {
-		LOG.warn("employees with salary range: {}-{} was not found", salaryFrom, salaryTo);
+		res = String.format("found: %s employees with salary range[%s-%s]: %s",
+				list.size(), salaryFrom, salaryTo, list.toString());
 	}
 	return res;
 }
 
 @GetMapping("/employees/age/{ageFrom}/{ageTo}")	
-String getEmployeeByAge(@PathVariable @Min(20) int ageFrom,@Max(70) @PathVariable int ageTo) {
-	LOG.debug("request for getting employee with age in range: {}-{}", ageFrom, ageTo);
+String getEmployeeByAge(@PathVariable @Min(20) int ageFrom,@Max(70) @PathVariable int ageTo, Principal user) {
+	LOG.debug("request for getting employee with age in range: {}-{}, by user: {}", ageFrom, ageTo, user.getName());
 	String res = String.format("employees with age range [%s-%s] was not found",
 			ageFrom, ageTo);
 	List<Employee> list = companyService.employeesByAge(ageFrom, ageTo);
 	if(list.size() != 0) {
-		res = String.format("list employees by age in range [%s-%s]: %s",
-				ageFrom, ageTo, list.toString());
-		LOG.debug("there are {} employees in age range: {}-{}", list.size(), ageFrom, ageTo);
-	} else {
-		LOG.warn("employees with age range: {}-{} was not found", ageFrom, ageTo);
+		res = String.format("found: %s employees in age range [%s-%s]: %s",
+				list.size(), ageFrom, ageTo, list.toString());
 	}
 	return res;
 }
 
 @GetMapping("employees/month/{month}")
-String getEmployeeByMonthBirth(@PathVariable @Min(1) @Max(12)int month) {
-	LOG.debug("request for getting employee with birthday on month: {}", Month.of(month));
+String getEmployeeByMonthBirth(@PathVariable @Min(1) @Max(12)int month, Principal user) {
+	LOG.debug("request for getting employees with birthday on month: {}, by user: {}", Month.of(month), user.getName());
 	String res = String.format("employees with month of birth: %s was not found", Month.of(month));
 	List<Employee> list = companyService.employeesByBirthMonth(month);
 	if(list.size() != 0) {
-		res = String.format("list employees with birth month %s: %s", Month.of(month),
+		res = String.format("found: %s employees with birth month %s: %s", list.size(), Month.of(month),
 				list.toString());
-		LOG.debug("there are {} employees with birthday on month: {}", list.size(), Month.of(month));
-	} else {
-		LOG.warn("employees with wuth birthday in month: {} was not found", Month.of(month));
-	}
+	} 
 	return res;
 }
 

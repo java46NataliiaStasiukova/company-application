@@ -22,29 +22,22 @@ public class SecurityConfiguration {
 private String admin;
 @Value("${app.admin.password:${ADMIN_PASSWORD}}")
 private String adminPassword;
-	
+
 	@Bean
-	@Order(Ordered.LOWEST_PRECEDENCE) //lowest priority
+	@Order(Ordered.HIGHEST_PRECEDENCE) 
 	SecurityFilterChain configure(HttpSecurity http) throws Exception {
 		http
 			.csrf()
 			.disable()
 			.authorizeHttpRequests(requests -> 
 				requests
-				//TODO
-				//Not working, not done yet
-				
-//				.requestMatchers(HttpMethod.GET).hasAuthority("ADMIN_COMPANY")
-//				.requestMatchers(HttpMethod.PUT).hasAuthority("ADMIN_COMPANY")
-//				.requestMatchers(HttpMethod.POST).hasAuthority("ADMIN_COMPANY")
-//				.requestMatchers(HttpMethod.DELETE).hasAuthority("ADMIN_COMPANY")
-				.requestMatchers("/company").hasRole("ADMIN_COMPANY")
-				.requestMatchers("/company/employees/age").permitAll()
-				.requestMatchers("/company/employees/month").permitAll()
-				.requestMatchers("/company/employees/salary").hasAnyRole("ACCOUNTER")
-				
-				.anyRequest()
-				.hasRole("ADMIN")
+				.requestMatchers("/company").permitAll()
+				.requestMatchers(HttpMethod.POST).hasAnyRole("ADMIN", "ADMIN_COMPANY")
+				.requestMatchers(HttpMethod.PUT).hasAnyRole("ADMIN", "ADMIN_COMPANY")
+				.requestMatchers(HttpMethod.DELETE).hasAnyRole("ADMIN", "ADMIN_COMPANY")
+				.requestMatchers("/company/employees/salary/**").hasAnyRole("ADMIN", "ACCOUNTER")
+			
+				.anyRequest().authenticated()
 			)
 			.httpBasic();
 		return http.build();
@@ -61,6 +54,23 @@ private String adminPassword;
 	      .password(bCryptPasswordEncoder.encode(adminPassword))
 	      .roles("ADMIN")
 	      .build());
+	    
+	    manager.createUser(User.withUsername("accounter@gmail.com")
+	  	  .password(bCryptPasswordEncoder.encode("accounter-pass"))
+	  	  .roles("ACCOUNTER")
+	  	  .build());
+	    
+	    manager.createUser(User.withUsername("admincompany@gmail.com")
+	  	  .password(bCryptPasswordEncoder.encode("admin-pass"))
+	  	  .roles("ADMIN_COMPANY")
+	  	  .build());
+	    
+	    manager.createUser(User.withUsername("user@gmail.com")
+		  .password(bCryptPasswordEncoder.encode("user-pass"))
+		  .roles("USER")
+		  .build());
+	    
+	    
 	   
 	    return manager;
 	}

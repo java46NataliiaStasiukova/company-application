@@ -5,10 +5,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
-
 import org.slf4j.*;
 import org.springframework.stereotype.Service;
-
 import telran.company.dto.Employee;
 
 @Service
@@ -35,7 +33,7 @@ public class CompanyServiceImpl implements CompanyService {
 	public Employee addEmployee(Employee empl) {
 		Integer id = generateId();
 		empl.setId(id);	
-
+		LOG.debug("ADDING employee: {}", empl.toString());
 		return add(id, empl);
 	}
 
@@ -61,6 +59,7 @@ public class CompanyServiceImpl implements CompanyService {
 		if(employees.get(empl.getId()) == null) {
 			throw new NoSuchElementException(String.format("employee with id: %s was not found", empl.getId()));
 		}
+		LOG.debug("UPDATING employee FROM: {} TO: {}", employees.get(empl.getId()), empl);
 		deleteEmployee(empl.getId());
 		
 		return add(empl.getId(), empl);
@@ -72,11 +71,11 @@ public class CompanyServiceImpl implements CompanyService {
 		if(employee == null) {
 			throw new NoSuchElementException(String.format("employee with id: %s was not found", id));
 		}
+		LOG.debug("REMOVING employee: {}, with id: {}", employee.toString(), id);
 		employeesSalary.get(employee.salary).remove(employee);
 		employeesAge.get((int) ChronoUnit.YEARS.between(LocalDate.parse(employee.birthDate),
 				LocalDate.now())).remove(employee);
 		employeesBirthMonth.get(LocalDate.parse(employee.birthDate).getMonthValue()).remove(employee);
-		
 		return employee;
 	}
 
@@ -85,10 +84,12 @@ public class CompanyServiceImpl implements CompanyService {
 		if(salaryFrom > salaryTo) {
 			throw new IllegalArgumentException(String.format("salary from: %s can not be bigger then salary to: %s", salaryFrom, salaryTo));
 		}
-		return employeesSalary.subMap(salaryFrom, true, salaryTo, true)
+		List<Employee> res = employeesSalary.subMap(salaryFrom, true, salaryTo, true)
 				.entrySet()
 				.stream().flatMap(x -> x.getValue().stream())
 				.collect(Collectors.toList());
+		LOG.debug("found: {} employees with SALARY from: {} to: {}, list:{}", res.size(), salaryFrom, salaryTo, res.toString());	
+		return res;
 	}
 
 	@Override
@@ -96,17 +97,22 @@ public class CompanyServiceImpl implements CompanyService {
 		if(ageFrom > ageTo) {
 			throw new IllegalArgumentException(String.format("age from: %s can not be bigger then age to: %s", ageFrom, ageTo));
 		}
-		return employeesAge.subMap(ageFrom, true, ageTo, true)
+		List<Employee> res = employeesAge.subMap(ageFrom, true, ageTo, true)
 				.entrySet()
 				.stream().flatMap(x -> x.getValue().stream())
 				.collect(Collectors.toList());
+	
+		LOG.debug("employees with AGE from: {} to: {}, list:{}", ageFrom, ageTo, res.toString());
+		return res;
 	}
 
 	@Override
 	public List<Employee> employeesByBirthMonth(int monthNumber) {
 
-		return employeesBirthMonth.getOrDefault(monthNumber, Collections.emptySet())
+		List<Employee> res = employeesBirthMonth.getOrDefault(monthNumber, Collections.emptySet())
 				.stream().collect(Collectors.toList());
+		LOG.debug("employees with BIRDTH_MONTH: {}, list: {}", monthNumber, res.toString());
+		return res;
 	}
 
 }
